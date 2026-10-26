@@ -14,8 +14,12 @@ mcp = MCPServer("H3 Cloud MCP")
 def h3_check_backend() -> dict:
     """Read the private ComfyUI system status before submitting paid GPU work."""
     system = comfy.request("GET", "/system_stats")
+    nodes = comfy.request("GET", "/object_info")
+    required = ("MiniMaxH3ImageToVideo", "VAEDecodeAudio", "CreateVideo", "SaveVideo")
+    missing = [name for name in required if name not in nodes]
     return {"reachable": True, "devices": system.get("devices", []),
-            "comfyui_version": system.get("system", {}).get("comfyui_version")}
+            "comfyui_version": system.get("system", {}).get("comfyui_version"),
+            "h3_nodes_ready": not missing, "missing_nodes": missing}
 
 
 @mcp.tool()
