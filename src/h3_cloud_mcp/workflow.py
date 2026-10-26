@@ -43,5 +43,5 @@ def build_t2va(prompt: str, width: int = 768, height: int = 448,
         "11": node("VAEDecode", samples=["10", 0], vae=["3", 0]),
         "12": node("VAEDecodeAudio", samples=["10", 0], vae=["4", 0]),
         "13": node("CreateVideo", images=["11", 0], audio=["12", 0], fps=24, bit_depth=8),
-        "14": node("SaveVideo", video=["13", 0], filename_prefix="h3_cloud_mcp", format="auto", codec="auto"),
+        "14": node("SaveVideo", video=["13", 0], filename_prefix="h3_cloud_mcp", format="mp4"),
     }
