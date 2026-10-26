@@ -18,6 +18,9 @@ import httpx
 BASE = "https://autodl.art"
 WORKFLOW = "minimax_h3_lightx2v_no_pic"
 RESOLUTIONS = {"480p横", "480p竖", "480p(1:1)", "768p横", "768p竖", "768p(1:1)"}
+# AutoDL Art currently returns a signed video URL on this Volcengine TOS host.
+# A local proxy may map it to a synthetic 198.18.0.0/15 DNS address.
+TRUSTED_OUTPUT_HOSTS = {"cg-comfyui-prod.tos-cn-beijing.volces.com"}
 # Observed on the vendor's page, 2026-10-26. The service may change prices.
 RATES = {"480p": {"peak": 0.04, "offpeak": 0.03}, "768p": {"peak": 0.05, "offpeak": 0.04}}
 _submitted = 0
@@ -122,6 +125,8 @@ def _public_https(url: str) -> None:
         raise ValueError("result URL must be public HTTPS")
     if parsed.port not in (None, 443):
         raise ValueError("result URL must use HTTPS port 443")
+    if parsed.hostname in TRUSTED_OUTPUT_HOSTS:
+        return
     try:
         addresses = socket.getaddrinfo(parsed.hostname, 443, type=socket.SOCK_STREAM)
     except OSError as exc:

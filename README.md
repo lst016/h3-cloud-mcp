@@ -21,6 +21,14 @@ AUTODL_ART_TOKEN="$(security find-generic-password -s h3-cloud-mcp-autodl-art -w
 
 macOS 可先由用户自行将令牌存入钥匙串，服务名称 `h3-cloud-mcp-autodl-art`。其他系统用其秘密管理器向 MCP 进程提供环境变量。`H3_ART_MAX_ESTIMATED_CNY` 默认 `0.25`，`H3_ART_MAX_TASKS_PER_SESSION` 默认 `1`；只在确认平台报价与预算后调整。MCP **不会重试提交 POST**：请求超时可能代表任务已经创建，先查平台账单或任务列表，避免重复扣费。
 
+macOS 用户把令牌存入钥匙串后，可在 MCP 客户端把 stdio 命令指向 [`scripts/run-art-mcp-macos.sh`](scripts/run-art-mcp-macos.sh)。脚本在启动时从钥匙串读取令牌，并保持每个进程最多一条、每条按已观察价格估算最多 ¥0.25。令牌过期或额度用完后，更新钥匙串令牌即可；不要把令牌放进客户端的明文配置。首次保存令牌时，在交互式终端执行 `security add-generic-password -a "$(id -un)" -s h3-cloud-mcp-autodl-art -w`，按提示输入令牌；已存在的条目加 `-U` 更新。不要把令牌写在命令行参数里。
+
+Codex CLI 示例：
+
+```sh
+codex mcp add h3-art -- /absolute/path/h3-cloud-mcp/scripts/run-art-mcp-macos.sh
+```
+
 | 工具 | 作用 |
 | --- | --- |
 | `h3_art_quote` | 本地估算价格，不产生费用。 |
@@ -117,4 +125,4 @@ MCP 限制 `COMFYUI_URL` 为本机 HTTP 地址，预期通过 SSH 隧道访问�
 
 ## 验证范围
 
-`uv sync`、MCP 工具注册、托管 API 与模拟 ComfyUI API 测试可在无 GPU 本机完成。托管 API 的真实验收需跑通：检查价格和余额 → 创建令牌 → 提交一条任务 → 查询成功 → 下载 MP4 → 核对账单。私有 ComfyUI 的真实验收另需检查节点和权重，并在用完后关机。未完成这些步骤前不宣称真实出片成功。
+托管 API 已在 2026-10-26 完成一次真实验收：检查价格和余额 → 使用限额令牌 → 提交一条任务 → 查询成功 → 下载 MP4 → 核对实际费用。产物是 5.167 秒、864×480 的 H.264/AAC 视频；详见[验收记录](docs/validation.md)。私有 ComfyUI 备用路线仍只通过本地模拟测试，未完成真实 GPU 出片验收。

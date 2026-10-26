@@ -53,6 +53,7 @@ class ArtApiTests(unittest.TestCase):
             art_api.status("../../other")
         with self.assertRaises(ValueError):
             art_api._public_https("http://127.0.0.1/video.mp4")
+        art_api._public_https("https://cg-comfyui-prod.tos-cn-beijing.volces.com/video.mp4")
 
 
 if __name__ == "__main__":

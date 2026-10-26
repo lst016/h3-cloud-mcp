@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import logging
 
 from mcp.server import MCPServer
 
@@ -87,6 +88,8 @@ def h3_cancel_job(job_id: str) -> dict:
 
 
 def main() -> None:
+    # Signed output URLs must not appear in MCP stderr logs.
+    logging.getLogger("httpx").setLevel(logging.WARNING)
     mcp.run(transport="stdio")
 
 
