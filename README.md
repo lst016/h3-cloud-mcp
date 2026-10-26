@@ -6,7 +6,7 @@
 
 ## 托管 API：先用这条路线
 
-AutoDL Art 页面在 2026-10-26 标价：480p 高峰 08:00–24:00 为 ¥0.04/生成秒，低峰 00:00–08:00 为 ¥0.03/生成秒；768p 分别为 ¥0.05 与 ¥0.04。**默认 5 秒 480p 横屏，页面价格约 ¥0.15–0.20**。价格会变动，提交前必须在[工作流页面](https://www.autodl.art/large-model/comfyui/minimax_h3_lightx2v_no_pic)核对。代码里的限额只依据观察到的价格估算，无法代替平台实际计费上限。
+AutoDL Art 页面在 2026-10-26 标价：480p 高峰 08:00–24:00 为 ¥0.04/生成秒，低峰 00:00–08:00 为 ¥0.03/生成秒；768p 分别为 ¥0.05 与 ¥0.04。**默认 5 秒 480p 横屏，页面价格约 ¥0.15–0.20**。全部 H3 型号、任务类别、分辨率及 AutoDL Art 18 个工作流的对照见[完整价格矩阵](docs/h3-price-matrix.md)。价格会变动，提交前必须在[工作流页面](https://www.autodl.art/large-model/comfyui/minimax_h3_lightx2v_no_pic)核对。代码里的限额只依据观察到的价格估算，无法代替平台实际计费上限。
 
 1. 登录 AutoDL Art，在[令牌管理](https://autodl.art/large-model/tokens)创建分组为 **ComfyUI** 的令牌。新账户可能需要先自行完成实名认证。不要将令牌或身份资料写进仓库、MCP 配置文件或聊天记录。
 2. 安装 Python 3.11+ 与 `uv`，执行 `uv sync`。在 MCP 进程的私有环境中提供 `AUTODL_ART_TOKEN`。先运行 `h3_art_quote`，核对平台实时价格与钱包余额。

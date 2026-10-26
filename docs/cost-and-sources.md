@@ -18,6 +18,8 @@
 
 ## AutoDL Art 实测与 MiniMax 官方 API 目录价
 
+全部 H3 模型、任务类别、输入素材收费、AutoDL Art 18 个工作流及每个标价分辨率的高峰／空闲对比，见[完整价格矩阵](h3-price-matrix.md)。
+
 按 2026-10-26 [国家外汇管理局人民币中间价](https://www.safe.gov.cn/AppStructured/hlw/RMBQuery.do)，100 美元 = ¥671.62，即 1 美元约 ¥6.7162。美元换算仅供比较，实际支付汇率及手续费可能不同。均按**请求生成 5 秒文生视频**计算；本次 AutoDL Art 下载的 MP4 长 5.167 秒，但账单按请求的 5 秒扣费。
 
 | 路线 | 分辨率与模型 | 5 秒费用 | 与 AutoDL Art 实测 ¥0.20 比较 | 证据层级 |
@@ -41,7 +43,7 @@
 - [AutoDL Art 托管 H3 文生视频](https://www.autodl.art/large-model/comfyui/minimax_h3_lightx2v_no_pic)：当前 480p/768p 按生成秒报价，具体以提交前页面为准。
 - [AutoDL Art 应用计费](https://autodl.art/docs/app/)：实例按开关机秒数收费，系统盘即使关机仍按日计费。
 - [AutoDL Art ComfyUI API](https://autodl.art/docs/comfyui_api/)：提交与查询两个端点，返回的成片 URL 有效期较短。
-- [MiniMax 官方 API 定价](https://platform.minimax.io/docs/pricing/overview)：H3、H3-Highspeed、H3-Lite 的分辨率与每秒目录价。API 成片与 AutoDL Art 工作流的质量、预处理阶段并不完全相同。
+- [MiniMax 官方 API 定价](https://platform.minimax.io/docs/pricing/overview)：H3、H3-Highspeed、H3-Lite、H3-Max 的分辨率、输出与输入素材目录价。API 成片与 AutoDL Art 工作流的质量、预处理阶段并不完全相同。
 - [社区 AutoDL 5090 部署记录](https://github.com/JuneYaooo/minimax-h3-autodl)：59 GiB 双模型组合与部署检查项；代码未复制进本仓库。
 - [社区 H3 MCP 案例](https://github.com/jonpojonpo/comfy-h3-mcp)：本地 ComfyUI MCP 工具范围参考；代码未复制进本仓库。
 - [MCP Python SDK v2](https://github.com/modelcontextprotocol/python-sdk)：使用 `MCPServer` 的 stdio 实现。
