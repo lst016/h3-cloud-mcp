@@ -6,6 +6,7 @@ set -euo pipefail
 MODEL_DIR="${H3_MODEL_DIR:-/root/autodl-tmp/h3-models}"
 COMFY_DIR="${COMFY_DIR:-/root/ComfyUI}"
 REVISION="fd70b39279d1ae6eb214c903f53e1bec3af19a77"
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
 command -v hf >/dev/null || { echo "Install huggingface_hub CLI first: python -m pip install -U huggingface_hub" >&2; exit 1; }
 test -d "$COMFY_DIR/models" || { echo "ComfyUI models directory not found: $COMFY_DIR/models" >&2; exit 1; }
@@ -20,6 +21,8 @@ hf download Comfy-Org/MiniMax-H3 \
     'vae/minimax_h3_audio_vae_fp32.safetensors' \
   --local-dir "$MODEL_DIR"
 
+(cd "$MODEL_DIR" && sha256sum --check "$SCRIPT_DIR/model-sha256.txt")
+
 for file in \
   diffusion_models/minimax_h3_fl2va_pruned_int8_convrot.safetensors \
   text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors \
@@ -33,4 +36,4 @@ for file in \
   fi
   if ! test -e "$link"; then ln -s "$MODEL_DIR/$file" "$link"; fi
 done
-echo "Four H3 files are linked. Verify them and run a real ComfyUI smoke test before claiming success."
+echo "Four H3 files passed SHA-256 and are linked. Run a real ComfyUI smoke test before claiming success."
