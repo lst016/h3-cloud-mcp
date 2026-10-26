@@ -5,11 +5,11 @@ build-backend = "hatchling.build"
 [project]
 name = "h3-cloud-mcp"
 version = "0.1.0"
-description = "A small MCP bridge for MiniMax H3 on a private cloud ComfyUI"
+description = "MCP tools for MiniMax H3 via AutoDL Art managed API or private ComfyUI"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
-dependencies = ["mcp>=2,<3", "httpx>=0.27,<1"]
+dependencies = ["mcp>=2,<3", "httpx[socks]>=0.27,<1"]
 
 [project.scripts]
 h3-cloud-mcp = "h3_cloud_mcp.server:main"

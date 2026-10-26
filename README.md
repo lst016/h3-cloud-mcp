@@ -1,10 +1,36 @@
 # H3 Cloud MCP
 
-用本机 MCP 工具控制云端单卡 ComfyUI，生成 MiniMax H3 音画视频。MCP 只在本机以 stdio 运行；AutoDL 实例负责推理，两者通过 SSH 本地端口转发连接。仓库不含模型权重、私钥、素材或成片。
+用本机 MCP 工具调用 AutoDL Art 托管的 MiniMax H3 文生视频工作流。按生成秒计费，无需租 GPU、下载权重或维持实例。需要自控 ComfyUI 时，也保留通过 SSH 隧道连接私有实例的备用工具。仓库不含模型权重、令牌、私钥、素材或成片。
 
-**先看现成方案**：[AutoDL Art 的 H3 社区应用](https://www.autodl.art/app/market/252)已带 H3 和多套工作流，应用页面标称支持 API；如果只做少量样片，[AutoDL Art 托管 H3 工作流](https://www.autodl.art/large-model/comfyui/minimax_h3_lightx2v_no_pic)按生成秒收费，省去租机和下载。本仓库当前实现的是自控 ComfyUI 的 MCP；社区应用可作为后端候选，但节点、模型文件名和 SSH 端口仍需在实际实例中核验。下方手动下载流程仅供需要独立环境时使用。
+**方案选择**：[AutoDL Art 托管 H3 工作流](https://www.autodl.art/large-model/comfyui/minimax_h3_lightx2v_no_pic)适合少量出片，是本仓库默认路线。[AutoDL Art 的 H3 社区应用](https://www.autodl.art/app/market/252)已带 H3 和工作流，适合需要控制节点、插件或批量任务的用户，但会产生 GPU 和系统盘费用。下方手动下载流程仅供需要独立环境时使用。
 
-## 能做什么
+## 托管 API：先用这条路线
+
+AutoDL Art 页面在 2026-10-26 标价：480p 高峰 08:00–24:00 为 ¥0.04/生成秒，低峰 00:00–08:00 为 ¥0.03/生成秒；768p 分别为 ¥0.05 与 ¥0.04。**默认 5 秒 480p 横屏，页面价格约 ¥0.15–0.20**。价格会变动，提交前必须在[工作流页面](https://www.autodl.art/large-model/comfyui/minimax_h3_lightx2v_no_pic)核对。代码里的限额只依据观察到的价格估算，无法代替平台实际计费上限。
+
+1. 登录 AutoDL Art，在[令牌管理](https://autodl.art/large-model/tokens)创建分组为 **ComfyUI** 的令牌。不要将令牌写进仓库、MCP 配置文件或聊天记录。
+2. 安装 Python 3.11+ 与 `uv`，执行 `uv sync`。在 MCP 进程的私有环境中提供 `AUTODL_ART_TOKEN`。先运行 `h3_art_quote`，核对平台实时价格与钱包余额。
+3. 准备付费时才设置 `H3_ART_ENABLE_PAID=1`。默认还限制一次 MCP 进程只提交一条任务，并拒绝根据已观察高峰价格估算超过 ¥0.25 的调用。下例使用环境变量注入令牌；不要把真实令牌替换到文档或 shell 历史中。
+
+```sh
+uv sync
+AUTODL_ART_TOKEN="$(security find-generic-password -s h3-cloud-mcp-autodl-art -w)" \
+  H3_ART_ENABLE_PAID=1 \
+  uv run h3-cloud-mcp
+```
+
+macOS 可先由用户自行将令牌存入钥匙串，服务名称 `h3-cloud-mcp-autodl-art`。其他系统用其秘密管理器向 MCP 进程提供环境变量。`H3_ART_MAX_ESTIMATED_CNY` 默认 `0.25`，`H3_ART_MAX_TASKS_PER_SESSION` 默认 `1`；只在确认平台报价与预算后调整。MCP **不会重试提交 POST**：请求超时可能代表任务已经创建，先查平台账单或任务列表，避免重复扣费。
+
+| 工具 | 作用 |
+| --- | --- |
+| `h3_art_quote` | 本地估算价格，不产生费用。 |
+| `h3_art_generate` | 提交文生视频任务，返回 `task_id`，默认 5 秒 480p 横屏。 |
+| `h3_art_job_status` | 查询任务状态，不显示临时签名下载地址。 |
+| `h3_art_download_video` | 成功后立即下载 MP4 到 `H3_OUTPUT_DIR`（默认 `outputs/`）。 |
+
+示例调用：`h3_art_generate({"prompt":"雨夜的街道，镜头缓慢向前推进，霓虹灯倒映在地面","duration":5,"resolution":"480p横"})`。拿到 `task_id` 后调用 `h3_art_job_status`，成功后调用 `h3_art_download_video`。下载地址有效期较短。托管服务的视频质量、声音与实际扣费要通过真实任务验收；本地模拟测试不等于已出片。
+
+## 私有 ComfyUI 备用工具
 
 - `h3_check_backend`：检查 ComfyUI 可达性、H3 节点和四个权重文件是否可见。
 - `h3_generate`：提交文生音画任务，立即返回 `job_id`；默认 768×448、124 帧、20 步，约 5.17 秒。
@@ -12,7 +38,7 @@
 - `h3_download_video`：下载完成的 MP4 到本机 `outputs/`。
 - `h3_cancel_job`：移除排队任务，或请求中断指定的运行任务。
 
-当前版本只提供 FL2VA 文生音画。首尾帧、参考视频和导演台工作流可在后续版本接入。代码未经真实 GPU 生成验收时，请把它视为本地已测试的适配器，而非云端已跑通的服务。
+私有 ComfyUI 工具只提供 FL2VA 文生音画。托管 API 工具只提供官方 H3 文生视频工作流。首尾帧、参考视频和导演台工作流尚未接入。未真实生成验收前，请把它们视为本地已测试的适配器。
 
 ## 选择算力
 
@@ -58,7 +84,7 @@
 
 AutoDL 的 [实例计费规则](https://www.autodl.com/docs/price/)以实例开关机时间计费，关机后付费扩容数据盘仍可能计费。模型许可、磁盘及实例的保留方式应在长期运行前确认。
 
-## 本机安装 MCP
+## 私有 ComfyUI 的本机安装
 
 需要 Python 3.11+、`uv` 和已建立的 SSH 隧道：
 
@@ -91,4 +117,4 @@ MCP 限制 `COMFYUI_URL` 为本机 HTTP 地址，预期通过 SSH 隧道访问�
 
 ## 验证范围
 
-`uv sync`、MCP 工具注册和模拟 ComfyUI API 测试可在无 GPU 本机完成。真正的云端验收需跑通：节点和权重检查 → 生成任务 → 音画 MP4 → 本机下载 → 关机并核对账单。未完成这些步骤前不宣称真实出片成功。
+`uv sync`、MCP 工具注册、托管 API 与模拟 ComfyUI API 测试可在无 GPU 本机完成。托管 API 的真实验收需跑通：检查价格和余额 → 创建令牌 → 提交一条任务 → 查询成功 → 下载 MP4 → 核对账单。私有 ComfyUI 的真实验收另需检查节点和权重，并在用完后关机。未完成这些步骤前不宣称真实出片成功。

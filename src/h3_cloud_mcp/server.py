@@ -1,4 +1,4 @@
-"""stdio MCP tools for a private, rented ComfyUI instance."""
+"""stdio MCP tools for managed AutoDL Art and private ComfyUI H3 workflows."""
 
 from __future__ import annotations
 
@@ -6,10 +6,34 @@ import os
 
 from mcp.server import MCPServer
 
-from . import comfy
+from . import art_api, comfy
 from .workflow import build_t2va
 
 mcp = MCPServer("H3 Cloud MCP")
+
+
+@mcp.tool()
+def h3_art_quote(duration: int = 5, resolution: str = "480p横") -> dict:
+    """Estimate AutoDL Art managed H3 price using rates observed 2026-10-26; no charge."""
+    return art_api.quote(duration, resolution)
+
+
+@mcp.tool()
+def h3_art_generate(prompt: str, duration: int = 5, resolution: str = "480p横", seed: int | None = None) -> dict:
+    """Submit one paid managed H3 text-to-video task; requires AUTODL_ART_TOKEN and H3_ART_ENABLE_PAID=1."""
+    return art_api.generate(prompt, duration, resolution, seed)
+
+
+@mcp.tool()
+def h3_art_job_status(task_id: str) -> dict:
+    """Check a managed H3 task status. A completed video URL is short lived."""
+    return art_api.status(task_id)
+
+
+@mcp.tool()
+def h3_art_download_video(task_id: str) -> dict:
+    """Download a completed managed H3 MP4 into H3_OUTPUT_DIR."""
+    return art_api.download(task_id)
 
 
 @mcp.tool()
