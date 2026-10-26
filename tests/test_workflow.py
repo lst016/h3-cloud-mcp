@@ -19,7 +19,7 @@ class WorkflowTests(unittest.TestCase):
                     self.assertIn(value[0], graph)
 
     def test_rejects_expensive_or_invalid_shapes(self):
-        for kwargs in ({"width": 1281}, {"frames": 125}, {"steps": 51}, {"seed": -1}):
+        for kwargs in ({"width": 1281}, {"frames": 107}, {"frames": 125}, {"steps": 51}, {"seed": -1}, {"width": 1344, "height": 768, "frames": 362, "steps": 50}):
             with self.subTest(kwargs=kwargs), self.assertRaises(ValueError):
                 build_t2va("test", **kwargs)
 
@@ -30,10 +30,20 @@ class WorkflowTests(unittest.TestCase):
 
     def test_reads_completed_video_and_queue(self):
         job = "a1b2-c3"
-        with patch.object(comfy, "request", return_value={job: {"status": {"status_str": "success"}, "outputs": {"14": {"videos": [{"filename": "clip.mp4", "type": "output"}]}}}}):
+        with patch.object(comfy, "request", return_value={job: {"status": {"status_str": "success"}, "outputs": {"14": {"images": [{"filename": "clip.mp4", "type": "output"}]}}}}):
             self.assertEqual(comfy.status(job)["videos"][0]["filename"], "clip.mp4")
         with patch.object(comfy, "request", side_effect=[{}, {"queue_running": [[0, job, {}]]}]):
             self.assertEqual(comfy.status(job)["state"], "running")
+
+    def test_prevents_duplicate_paid_queue_and_cancels_target(self):
+        job = "a1b2-c3"
+        with patch.object(comfy, "request", return_value={"queue_running": [[0, job, {}]]}) as request:
+            with self.assertRaises(RuntimeError):
+                comfy.submit(build_t2va("test", seed=42))
+            request.assert_called_once_with("GET", "/queue")
+        with patch.object(comfy, "request", side_effect=[{"queue_pending": [[0, job, {}]]}, {}]) as request:
+            self.assertEqual(comfy.cancel(job)["action"], "removed_from_queue")
+            request.assert_any_call("POST", "/queue", json={"delete": [job]})
 
 
 if __name__ == "__main__":

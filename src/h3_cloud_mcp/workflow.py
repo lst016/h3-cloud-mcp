@@ -12,10 +12,12 @@ def build_t2va(prompt: str, width: int = 768, height: int = 448,
         raise ValueError("prompt must contain 1–6000 characters")
     if width % 32 or height % 32 or not (256 <= width <= 1344) or not (256 <= height <= 768):
         raise ValueError("width and height must be multiples of 32 in the supported range")
-    if frames not in (56, 73, 90, 107, 124, 141, 158, 175, 192, 209, 226, 243, 260, 277, 294, 311, 328, 345, 362):
-        raise ValueError("frames must follow 17n+5, between 56 and 362")
+    if frames not in (124, 141, 158, 175, 192, 209, 226, 243, 260, 277, 294, 311, 328, 345, 362):
+        raise ValueError("frames must follow 17n+5, within the trained range of 124–362")
     if not 1 <= steps <= 50:
         raise ValueError("steps must be between 1 and 50")
+    if width * height * frames * steps > 768 * 448 * 124 * 20 and os.getenv("H3_ALLOW_LARGE_JOBS") != "1":
+        raise ValueError("job exceeds the default compute limit; set H3_ALLOW_LARGE_JOBS=1 to override")
     seed = secrets.randbelow(2**53) if seed is None else seed
     if not 0 <= seed < 2**53:
         raise ValueError("seed must be a non-negative safe integer")
