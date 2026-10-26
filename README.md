@@ -1,8 +1,8 @@
 # H3 Cloud MCP
 
-用本地 MCP 客户端调用 [AutoDL Art 的 MiniMax H3 文生视频工作流](https://www.autodl.art/large-model/comfyui/minimax_h3_lightx2v_no_pic)：提交提示词、查询任务、下载 MP4。视频由 AutoDL Art 托管生成，使用者无需为这条路线单独租 GPU 或下载模型权重。
+用本地 MCP 客户端调用 [AutoDL Art 的 MiniMax H3 托管工作流](https://www.autodl.art/large-model/comfyui/minimax_h3_lightx2v_no_pic)：提交文生、首尾帧、图片或音频参考任务，查询状态并下载 MP4。视频由 AutoDL Art 托管生成，使用者无需为这条路线单独租 GPU 或下载模型权重。
 
-**当前状态：**文生视频链路已真实跑通两次。两条 5 秒、480p 横屏样片分别实扣 **¥0.20**，产物均为 864×480、5.167 秒的 H.264/AAC MP4。仓库已公开代码与[验收记录](docs/validation.md)；样片、令牌和个人资料不在仓库中。此 MCP 在你的电脑上以 stdio 运行，并不是已经部署好的公共在线服务。
+**当前状态：**MCP 已按 AutoDL Art 的参数表接入目录中的 **18 个 H3 工作流**，覆盖文生、首尾帧、多图和多音频。文生视频链路真实跑通两次：两条 5 秒、480p 横屏样片分别实扣 **¥0.20**，产物均为 864×480、5.167 秒的 H.264/AAC MP4。其他工作流已做参数校验与本地模拟测试，尚未逐个付费出片。仓库不含样片、令牌或个人资料。此 MCP 在你的电脑上以 stdio 运行，并不是已经部署好的公共在线服务。
 
 > [完整使用说明书](docs/user-guide.md)：从注册／登录、实名认证、设置限额令牌，到安装、出片、核对账单和常见问题。首次使用请按说明书操作。
 
@@ -12,10 +12,13 @@
 | --- | --- |
 | `h3_art_quote` | 按 2026-10-26 观察价格**本地估算**，不调用平台，不产生费用。 |
 | `h3_art_generate` | 提交一条付费文生视频任务，返回 `task_id`。 |
+| `h3_art_list_workflows` | 列出 18 个工作流的类别、分辨率、时长和素材要求。 |
+| `h3_art_quote_workflow` | 按所选工作流估算价格，不产生费用。 |
+| `h3_art_generate_workflow` | 按工作流 ID 提交文生、首尾帧、多图或多音频任务；素材使用 HTTPS URL。 |
 | `h3_art_job_status` | 根据 `task_id` 查询排队、运行或完成状态。 |
 | `h3_art_download_video` | 下载完成的 MP4 到本机 `outputs/`，或 `H3_OUTPUT_DIR` 指定的位置。 |
 
-托管路线目前只接入工作流 `minimax_h3_lightx2v_no_pic`。支持 480p／768p 的横屏、竖屏或 1:1，时长 1–15 秒；默认 5 秒、480p 横屏。首尾帧、图生、多图参考等其他工作流目前**只做了价格调研，尚未接入 MCP**。[全部 H3 价格与类别](docs/h3-price-matrix.md)不等于本仓库已支持的功能。
+原有的 `h3_art_generate` 是已实测文生工作流 `minimax_h3_lightx2v_no_pic` 的快捷入口；新工具按各工作流要求选择分辨率、时长、必填图片与音频。**18 个工作流的价格已核对，但只有文生工作流真实出片验收**。图片和音频输入当前使用可访问的 HTTPS URL；本机文件上传尚未接入。[各类别及分辨率](docs/h3-price-matrix.md)、[调用示例](docs/user-guide.md)。
 
 ## 五步开始（macOS）
 
@@ -40,7 +43,7 @@
    codex mcp add h3-art -- /absolute/path/h3-cloud-mcp/scripts/run-art-mcp-macos.sh
    ```
 
-5. 打开[工作流价格页](https://www.autodl.art/large-model/comfyui/minimax_h3_lightx2v_no_pic)核对实时单价，再在 MCP 客户端依次调用 `h3_art_quote` → `h3_art_generate` → `h3_art_job_status` → `h3_art_download_video`。示例：`h3_art_generate({"prompt":"一只透明玻璃鲸鱼在桌面上方缓慢游动，单镜头，无文字","duration":5,"resolution":"480p横"})`。
+5. 打开**所选工作流**的价格页核对实时单价，再在 MCP 客户端调用 `h3_art_list_workflows` → `h3_art_quote_workflow` → `h3_art_generate_workflow` → `h3_art_job_status` → `h3_art_download_video`。只做已实测文生时，也可使用快捷工具：`h3_art_generate({"prompt":"一只透明玻璃鲸鱼在桌面上方缓慢游动，单镜头，无文字","duration":5,"resolution":"480p横"})`。
 
 完整参数、Codex 配置、Windows／Linux 说明和出错处理见[使用说明书](docs/user-guide.md)。`scripts/run-art-mcp-macos.sh` 会启用付费提交，并在**每个 MCP 进程**中限制最多 1 条任务、按已观察高峰价估算最多 ¥0.25。这个本地估算不是平台账单上限；平台令牌额度要单独设置。提交超时后先查平台任务与账单，**不要盲目重复提交**。
 

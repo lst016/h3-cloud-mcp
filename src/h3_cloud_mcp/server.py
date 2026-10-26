@@ -20,14 +20,37 @@ def h3_art_quote(duration: int = 5, resolution: str = "480p横") -> dict:
 
 
 @mcp.tool()
+def h3_art_list_workflows() -> list[dict]:
+    """List 18 reviewed AutoDL Art H3 workflows, categories, media requirements and resolutions."""
+    return art_api.list_workflows()
+
+
+@mcp.tool()
+def h3_art_quote_workflow(workflow_id: str, duration: int = 5, resolution: str | None = None) -> dict:
+    """Estimate one selected H3 workflow using observed rates; no charge or live price lookup."""
+    return art_api.quote_workflow(workflow_id, duration, resolution)
+
+
+@mcp.tool()
 def h3_art_generate(prompt: str, duration: int = 5, resolution: str = "480p横", seed: int | None = None) -> dict:
     """Submit one paid managed H3 text-to-video task; requires AUTODL_ART_TOKEN and H3_ART_ENABLE_PAID=1."""
     return art_api.generate(prompt, duration, resolution, seed)
 
 
 @mcp.tool()
+def h3_art_generate_workflow(workflow_id: str, prompt: str = "", duration: int = 5,
+                             resolution: str | None = None, images: list[str] | None = None,
+                             audios: list[str] | None = None, first_frame: str | None = None,
+                             last_frame: str | None = None, mode: str | None = None,
+                             seed: int | None = None) -> dict:
+    """Submit one allowlisted paid H3 workflow. Media must be public HTTPS URLs; no local file upload."""
+    return art_api.generate_workflow(workflow_id, prompt, duration, resolution, images,
+                                     audios, first_frame, last_frame, mode, seed)
+
+
+@mcp.tool()
 def h3_art_job_status(task_id: str) -> dict:
-    """Check a managed H3 task status. A completed video URL is short lived."""
+    """Check any managed H3 task status. processing_seconds is task time, not clip length."""
     return art_api.status(task_id)
 
 

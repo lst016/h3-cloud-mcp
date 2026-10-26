@@ -10,7 +10,7 @@
 - `h3_download_video`：下载完成的 MP4 到本机 `outputs/`。
 - `h3_cancel_job`：移除排队任务，或请求中断指定的运行任务。
 
-私有 ComfyUI 工具只提供 FL2VA 文生音画。托管 API 工具只提供 AutoDL Art 的 H3 文生视频工作流，并未接入 MiniMax 官方 API。首尾帧、参考视频和导演台工作流尚未接入。私有路线未真实出片验收，目前只是本地已测试的适配器。
+私有 ComfyUI 工具只提供 FL2VA 文生音画。托管 API 工具另外接入 AutoDL Art 目录中的 18 个 H3 工作流，但并未接入 MiniMax 官方 API；两条已出片样本都是托管文生。私有路线仍未真实出片验收，目前只是本地已测试的适配器。
 
 ## 选择算力
 

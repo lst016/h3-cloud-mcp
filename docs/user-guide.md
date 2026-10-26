@@ -1,8 +1,8 @@
 # H3 Cloud MCP 使用说明书
 
-更新：2026-10-26。本文带你从创建 AutoDL Art 账户走到生成、下载一条 MiniMax H3 文生视频。当前可用路线是 **AutoDL Art 托管工作流** `minimax_h3_lightx2v_no_pic`；MCP 服务在本机运行，生成任务由 AutoDL Art 执行。无需创建 GPU 实例。仓库地址：[lst016/h3-cloud-mcp](https://github.com/lst016/h3-cloud-mcp)。
+更新：2026-10-26。本文带你从创建 AutoDL Art 账户走到使用 MiniMax H3 托管工作流生成、下载视频。MCP 服务在本机运行，生成任务由 AutoDL Art 执行，无需创建 GPU 实例。仓库地址：[lst016/h3-cloud-mcp](https://github.com/lst016/h3-cloud-mcp)。
 
-**先看结果边界：**本项目已用同一工作流真实生成两条 480p、请求 5 秒的样片，分别实扣 ¥0.20；每条下载的 MP4 为 864×480、5.167 秒。文生以外的首尾帧、图生、多图、多音频工作流仍未接入本 MCP。[验收记录](validation.md)与[全部价格矩阵](h3-price-matrix.md)分别记录实测和报价。
+**先看结果边界：**本项目已按平台输入表接入 18 个 H3 工作流。已真实出片的只有文生工作流：两条 480p、请求 5 秒的样片分别实扣 ¥0.20，MP4 均为 864×480、5.167 秒。其他类别完成本地参数与协议验证，尚未逐个付费出片；图片、音频需提供可访问的 HTTPS URL。[验收记录](validation.md)与[全部价格矩阵](h3-price-matrix.md)分别记录实测和报价。
 
 ## 1. 准备账户
 
@@ -52,13 +52,13 @@ codex mcp add h3-art -- /absolute/path/h3-cloud-mcp/scripts/run-art-mcp-macos.sh
 }
 ```
 
-脚本从 macOS 钥匙串读取令牌，设置 `H3_ART_ENABLE_PAID=1`，并限制每个 MCP 进程最多提交 **1 条**任务、按当日已观察高峰价估算单条最多 **¥0.25**。首次出片后，若确实要生成下一条，须重启 MCP 进程；先核对新任务报价和平台余额。`H3_ART_MAX_ESTIMATED_CNY` 是**本地估算阈值，不是实际账单硬上限**，所以仍需设置平台令牌总额度。
+脚本从 macOS 钥匙串读取令牌，设置 `H3_ART_ENABLE_PAID=1`，默认限制每个 MCP 进程最多提交 **1 条**任务、按当日已观察高峰价估算单条最多 **¥0.25**。首次出片后，若确实要生成下一条，须重启 MCP 进程；先核对新任务报价和平台余额。更高分辨率／更长视频若超过默认阈值，需先核对平台预算，再在启动前设置 `H3_ART_MAX_ESTIMATED_CNY`。这是**本地估算阈值，不是实际账单硬上限**，所以仍需设置平台令牌总额度。
 
 Windows／Linux 可通过自己的秘密管理器启动 `uv run --project /absolute/path/h3-cloud-mcp h3-cloud-mcp`，并向该进程提供 `AUTODL_ART_TOKEN`、`H3_ART_ENABLE_PAID=1`；默认本地单条估算上限 ¥0.25、每进程 1 条。不要通过命令行参数或公开配置直接传入令牌。
 
 ## 4. 出一条视频
 
-**先看实时价格：**打开[这一个工作流的价格页](https://www.autodl.art/large-model/comfyui/minimax_h3_lightx2v_no_pic)，确认当前 480p／768p 单价与时段。`h3_art_quote` 只把代码中 2026-10-26 的观察价相乘，**不读取平台实时价格、余额或令牌剩余额度**；二者不一致时以平台页面为准，暂停付费提交并更新配置。
+**先看实时价格：**打开所选工作流的[价格页](h3-price-matrix.md#autodl-art全部-h3-工作流及标价分辨率)，确认当前单价与时段。`h3_art_quote` 和 `h3_art_quote_workflow` 只把代码中 2026-10-26 的观察价相乘，**不读取平台实时价格、余额或令牌剩余额度**；二者不一致时以平台页面为准，暂停付费提交并更新配置。
 
 在 MCP 客户端依次调用下列工具（这里的 JSON 是工具参数，不是终端命令）：
 
@@ -69,9 +69,33 @@ Windows／Linux 可通过自己的秘密管理器启动 `uv run --project /absol
 | 3 | `h3_art_job_status({"task_id":"上一步返回的 UUID"})` | `QUEUED`、`RUNNING` 或 `SUCCESS`；仍在运行就稍后用**同一个** `task_id` 查询。 |
 | 4 | `h3_art_download_video({"task_id":"同一个 UUID"})` | 任务成功后下载 MP4，返回本机文件路径。 |
 
-允许的输出选项：`480p横`、`480p竖`、`480p(1:1)`、`768p横`、`768p竖`、`768p(1:1)`；`duration` 为 1–15 秒整数，默认 5 秒、480p 横屏。当前 MCP **只支持文字提示词**，没有图片上传入口。默认视频目录是仓库内 `outputs/`（已被 `.gitignore` 忽略），可用 `H3_OUTPUT_DIR` 改到其他本机目录。完成后尽快下载：平台返回的签名视频链接有效期有限。
+上表的快捷工具固定使用 `minimax_h3_lightx2v_no_pic`。它允许 `480p横`、`480p竖`、`480p(1:1)`、`768p横`、`768p竖`、`768p(1:1)`；`duration` 为 1–15 秒整数，默认 5 秒、480p 横屏。其他类别使用下节的 `h3_art_generate_workflow`。默认视频目录是仓库内 `outputs/`（已被 `.gitignore` 忽略），可用 `H3_OUTPUT_DIR` 改到其他本机目录。完成后尽快下载：平台返回的签名视频链接有效期有限。
 
-`h3_art_job_status` 返回的 `duration_seconds` 来自平台任务字段，**不要直接当成 MP4 播放时长**；真实时长以下载后播放器或 `ffprobe` 为准。本项目两条请求 5 秒的样片实长均为 5.167 秒。
+`h3_art_job_status` 返回的 `processing_seconds` 来自平台任务字段，表示处理耗时，**不是 MP4 播放时长**；真实时长以下载后播放器或 `ffprobe` 为准。本项目两条请求 5 秒的样片实长均为 5.167 秒。
+
+### 首尾帧、图生与音频参考
+
+先调用 `h3_art_list_workflows({})` 查看每个工作流的分辨率、最长时长、图片和音频数量要求。再用 `h3_art_quote_workflow` 估价。例如 `h3_art_quote_workflow({"workflow_id":"minimax_h3_lightx2v","duration":5,"resolution":"480p横"})`。实际提交前，仍要打开该工作流页面核对实时价格。`workflow_id` 的全部 18 个可选值见[工作流价格矩阵](h3-price-matrix.md#autodl-art全部-h3-工作流及标价分辨率)。
+
+下面是**参数示例，不是本仓库已经付费跑通的案例**。将 `.example` 地址换成平台能够读取的真实公开 HTTPS 素材地址；不要在公开文档中放带访问签名或私人资料的 URL。
+
+```json
+{"workflow_id":"minimax_h3_lightx2v","prompt":"一只玻璃鲸鱼缓慢游动","duration":5,"resolution":"480p横","first_frame":"https://images.example/first.png","last_frame":"https://images.example/last.png"}
+```
+
+上面的 JSON 是 `h3_art_generate_workflow` 的首尾帧参数。多图参考可改用 `minimax_h3_lightx2v_v5`，提供 `images` 数组：
+
+```json
+{"workflow_id":"minimax_h3_lightx2v_v5","prompt":"镜头平稳移动","duration":5,"resolution":"480p横","images":["https://images.example/one.png","https://images.example/two.png"]}
+```
+
+图音同步工作流使用一张图和一段音频，不接受 `prompt`；本工具会把 `duration` 转成平台要求的 `audio_duration`：
+
+```json
+{"workflow_id":"minimax_h3_image_audio_to_video","duration":5,"resolution":"480p横","images":["https://images.example/portrait.png"],"audios":["https://audio.example/voice.mp3"]}
+```
+
+以上三种任务提交后，都用返回的 `task_id` 调用同一组 `h3_art_job_status` 和 `h3_art_download_video`。`images`、`audios`、`first_frame`、`last_frame` 目前只接受公开 HTTPS URL；本机文件上传、base64 素材和输入视频尚未接入。所需素材数、时长、画幅因工作流而异，工具会在提交前检查；`minimax_h3_801`、`802`、`803` 另可传 `mode`（`高速模式` 或 `高质模式`）。高于默认 ¥0.25 本地估算阈值的任务会被拒绝，调整方法见第 3 节。
 
 ## 5. 核对费用，再考虑下一条
 
